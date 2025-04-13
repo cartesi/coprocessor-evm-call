@@ -1,0 +1,12 @@
+[package]
+name = "evm-call"
+edition.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+reqwest.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+url.workspace = true
+revm.workspace = true
+alloy-primitives.workspace = true
