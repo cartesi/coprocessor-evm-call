@@ -1,10 +1,11 @@
 use std::sync::Arc;
 
-use anyhow::{bail, Result};
 use reqwest::Client;
 use url::Url;
 
 use alloy_primitives::hex;
+
+use crate::gio_error::GIOError;
 
 #[repr(u32)]
 pub enum GIODomain {
@@ -45,7 +46,7 @@ impl GIOHash {
 
 pub struct GIOResponse {
     pub code: u32,
-    pub response: Vec<u8>,
+    pub data: Vec<u8>,
 }
 
 impl GIOResponse {
@@ -65,7 +66,11 @@ impl GIOClient {
         Self { url, client }
     }
 
-    pub async fn emit_gio(&self, domain: GIODomain, data: &Vec<u8>) -> Result<GIOResponse> {
+    pub async fn emit_gio(
+        &self,
+        domain: GIODomain,
+        data: &Vec<u8>,
+    ) -> Result<GIOResponse, GIOError> {
         let hex_data = hex::encode_prefixed(data);
         let request = GIOServerRequest {
             domain: domain as u32,
@@ -81,23 +86,24 @@ impl GIOClient {
             .header("Content-Type", "application/json")
             .body(body)
             .send()
-            .await?;
+            .await
+            .map_err(|err| GIOError::EmitFailed(err.to_string()))?;
 
-        if !resp.status().is_success() {
-            bail!("GIO request failed with status {}", resp.status())
-        }
-        let resp_body = resp.bytes().await?.to_vec();
-        let gio_resp: GIOServerResponse = serde_json::from_slice(&resp_body)?;
+        let resp_body = resp
+            .bytes()
+            .await
+            .map_err(|err| GIOError::EmitFailed(err.to_string()))?
+            .to_vec();
 
-        let gio_resp_data = if gio_resp.response.starts_with("0x") {
-            gio_resp.response.clone().split_off(2)
-        } else {
-            gio_resp.response
-        };
+        let resp_json: GIOServerResponse = serde_json::from_slice(&resp_body)
+            .map_err(|err| GIOError::EmitFailed(err.to_string()))?;
+
+        let resp_data =
+            hex::decode(resp_json.response).map_err(|err| GIOError::EmitFailed(err.to_string()))?;
 
         Ok(GIOResponse {
-            code: gio_resp.response_code,
-            response: gio_resp_data.into_bytes(),
+            code: resp_json.response_code,
+            data: resp_data,
         })
     }
 }
