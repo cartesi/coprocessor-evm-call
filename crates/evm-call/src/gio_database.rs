@@ -1,10 +1,12 @@
+use core::num;
+
+use alloy_rlp::Decodable;
 use revm::{
-    database_interface::async_db::DatabaseAsyncRef,
-    primitives::{Address, B256, U256},
-    state::{AccountInfo, Bytecode},
+    context::block, database_interface::async_db::DatabaseAsyncRef, primitives::{Address, B256, U256}, state::{AccountInfo, Bytecode}
 };
 
 use alloy_primitives::{BlockHash, Bytes};
+use alloy_consensus::Header;
 
 use crate::{
     gio_client::{GIOClient, GIODomain, GIOHash, GIOHint},
@@ -22,8 +24,8 @@ impl GIODatabase {
     }
 
     async fn get_preimage(&self, hash: B256) -> Result<Vec<u8>, GIOError> {
-        let data = concat_bytes(&GIOHash::Keccak256.to_bytes().to_vec(), &hash.to_vec());
-        let response = self.client.emit_gio(GIODomain::GetImage, &data).await?;
+        let input = concat_bytes(&GIOHash::Keccak256.to_bytes().to_vec(), &hash.to_vec());
+        let response = self.client.emit_gio(GIODomain::GetImage, &input).await?;
         if !response.is_ok() {
             Err(GIOError::BadResponse {
                 message: "failed to emit preimage".to_string(),
@@ -35,8 +37,8 @@ impl GIODatabase {
     }
 
     async fn emit_hint(&self, hint: GIOHint, input: &Vec<u8>) -> Result<(), GIOError> {
-        let data = concat_bytes(&hint.to_bytes().to_vec(), input);
-        let response = self.client.emit_gio(GIODomain::PreimageHint, &data).await?;
+        let input = concat_bytes(&hint.to_bytes().to_vec(), input);
+        let response = self.client.emit_gio(GIODomain::PreimageHint, &input).await?;
         if !response.is_ok() {
             Err(GIOError::BadResponse {
                 message: "failed to emit preimage".to_string(),
@@ -46,18 +48,23 @@ impl GIODatabase {
             Ok(())
         }
     }
-}
 
-fn concat_bytes(v1: &Vec<u8>, v2: &Vec<u8>) -> Vec<u8> {
-    [v1.as_slice(), v2.as_slice()].concat()
+    async fn get_block_header(&self, block_hash: BlockHash) -> Result<Header, GIOError> {
+        self.emit_hint(GIOHint::EthBlockPreimage, &block_hash.to_vec()).await?;
+        let header_data = self.get_preimage(block_hash).await?;
+        let mut header_data = header_data.as_slice();
+        let header = Header::decode(&mut header_data)
+            .map_err(|err| GIOError::BadResponseData(err.to_string()))?;
+        Ok(header)
+    }
 }
 
 impl DatabaseAsyncRef for GIODatabase {
     type Error = GIOError;
 
     async fn basic_async_ref(&self, address: Address) -> Result<Option<AccountInfo>, Self::Error> {
-        let data = concat_bytes(&self.block_hash.to_vec(), &address.to_vec());
-        let response = self.client.emit_gio(GIODomain::PreimageHint, &data).await?;
+        let input = concat_bytes(&self.block_hash.to_vec(), &address.to_vec());
+        let response = self.client.emit_gio(GIODomain::PreimageHint, &input).await?;
         if !response.is_ok() {
             return Err(GIOError::BadResponse {
                 message: "failed to get account".to_string(),
@@ -89,9 +96,40 @@ impl DatabaseAsyncRef for GIODatabase {
         Ok(Some(account))
     }
 
-    async fn code_by_hash_async_ref(&self, _code_hash: B256) -> Result<Bytecode, Self::Error> {}
+    async fn code_by_hash_async_ref(&self, _code_hash: B256) -> Result<Bytecode, Self::Error> {
+        panic!("This should not be called, as the code is already loaded");
+        // This is not needed, as the code is already loaded with basic_ref
+    }
 
-    async fn storage_async_ref(&self, address: Address, index: U256) -> Result<U256, Self::Error> {}
+    async fn storage_async_ref(&self, address: Address, index: U256) -> Result<U256, Self::Error> {
+        let input = concat_bytes(&self.block_hash.to_vec(), &address.to_vec());
+        let input = concat_bytes(&input, &index.to_le_bytes_vec());
 
-    async fn block_hash_async_ref(&self, number: u64) -> Result<B256, Self::Error> {}
+        let response = self.client.emit_gio(GIODomain::PreimageHint, &input).await?;
+        if !response.is_ok() {
+            return Err(GIOError::BadResponse {
+                message: "failed to get storage slot".to_string(),
+                response_code: response.code,
+            });
+        }
+
+        let slot_data: [u8; 32] = response.data.try_into()
+            .expect("invalid storage slot data length");
+        Ok(U256::from_le_bytes(slot_data))
+    }
+
+    async fn block_hash_async_ref(&self, number: u64) -> Result<B256, Self::Error> {
+        let mut block_hash = self.block_hash;
+        loop {
+            let header = self.get_block_header(block_hash).await?;
+            if header.number == number {
+                return Ok(header.hash_slow())
+            }
+            block_hash = header.parent_hash;
+        }
+    }
+}
+
+fn concat_bytes(v1: &Vec<u8>, v2: &Vec<u8>) -> Vec<u8> {
+    [v1.as_slice(), v2.as_slice()].concat()
 }

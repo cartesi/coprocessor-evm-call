@@ -16,12 +16,11 @@ anyhow = "1.0.97"
 thiserror = "2.0.12"
 
 alloy-primitives = "1.0.0"
+alloy-consensus = "0.14.0"
+alloy-rlp = "0.3.11"
 revm = { version = "22.0.0", features = ["asyncdb" ] }
 
 reqwest = "0.12.15"
-
+url = "2.5.4"
 serde = { version = "1.0.219", features = [ "serde_derive"]}
 serde_json = "1.0.140"
-
-url = "2.5.4"
-

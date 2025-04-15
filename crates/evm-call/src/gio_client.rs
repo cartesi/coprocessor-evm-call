@@ -69,9 +69,9 @@ impl GIOClient {
     pub async fn emit_gio(
         &self,
         domain: GIODomain,
-        data: &Vec<u8>,
+        input: &Vec<u8>,
     ) -> Result<GIOResponse, GIOError> {
-        let hex_data = hex::encode_prefixed(data);
+        let hex_data = hex::encode_prefixed(input);
         let request = GIOServerRequest {
             domain: domain as u32,
             id: hex_data,
