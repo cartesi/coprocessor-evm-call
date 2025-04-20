@@ -55,6 +55,7 @@ impl GIOResponse {
     }
 }
 
+#[derive(Clone)]
 pub struct GIOClient {
     url: Url,
     client: Arc<Client>,
