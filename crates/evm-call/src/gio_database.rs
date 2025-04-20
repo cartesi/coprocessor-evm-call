@@ -1,8 +1,8 @@
-use core::num;
-
 use alloy_rlp::Decodable;
 use revm::{
-    context::block, database_interface::async_db::DatabaseAsyncRef, primitives::{Address, B256, U256}, state::{AccountInfo, Bytecode}
+    database_interface::async_db::DatabaseAsync,
+    primitives::{Address, B256, U256},
+    state::{AccountInfo, Bytecode}
 };
 
 use alloy_primitives::{BlockHash, Bytes};
@@ -59,10 +59,10 @@ impl GIODatabase {
     }
 }
 
-impl DatabaseAsyncRef for GIODatabase {
+impl DatabaseAsync for GIODatabase {
     type Error = GIOError;
 
-    async fn basic_async_ref(&self, address: Address) -> Result<Option<AccountInfo>, Self::Error> {
+    async fn basic_async(&mut self, address: Address) -> Result<Option<AccountInfo>, Self::Error> {
         let input = concat_bytes(&self.block_hash.to_vec(), &address.to_vec());
         let response = self.client.emit_gio(GIODomain::PreimageHint, &input).await?;
         if !response.is_ok() {
@@ -96,12 +96,12 @@ impl DatabaseAsyncRef for GIODatabase {
         Ok(Some(account))
     }
 
-    async fn code_by_hash_async_ref(&self, _code_hash: B256) -> Result<Bytecode, Self::Error> {
+    async fn code_by_hash_async(&mut self, _code_hash: B256) -> Result<Bytecode, Self::Error> {
         panic!("This should not be called, as the code is already loaded");
         // This is not needed, as the code is already loaded with basic_ref
     }
 
-    async fn storage_async_ref(&self, address: Address, index: U256) -> Result<U256, Self::Error> {
+    async fn storage_async(&mut self, address: Address, index: U256) -> Result<U256, Self::Error> {
         let input = concat_bytes(&self.block_hash.to_vec(), &address.to_vec());
         let input = concat_bytes(&input, &index.to_le_bytes_vec());
 
@@ -118,7 +118,7 @@ impl DatabaseAsyncRef for GIODatabase {
         Ok(U256::from_le_bytes(slot_data))
     }
 
-    async fn block_hash_async_ref(&self, number: u64) -> Result<B256, Self::Error> {
+    async fn block_hash_async(&mut self, number: u64) -> Result<B256, Self::Error> {
         let mut block_hash = self.block_hash;
         loop {
             let header = self.get_block_header(block_hash).await?;
