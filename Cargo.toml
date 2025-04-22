@@ -1,7 +1,7 @@
 [workspace]
 members = [
-    "bins/runner",
-    "crates/evm-call",
+    "bins/cartesi-coprocessor-evm-runner",
+    "crates/cartesi-coprocessor-evm",
 ]
 resolver = "2"
 
@@ -10,7 +10,7 @@ repository = "https://github.com/zippiehq/cartesi-coprocessor-evm-call"
 edition = "2021"
 
 [workspace.dependencies]
-evm-call = { path = "crates/evm-call" }
+cartesi-coprocessor-evm = { path = "crates/cartesi-coprocessor-evm" }
 
 anyhow = "1.0.97"
 thiserror = "2.0.12"

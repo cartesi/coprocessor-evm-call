@@ -715,8 +715,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "cartesi-coprocessor-evm"
+version = "0.0.0"
+dependencies = [
+ "alloy-consensus",
+ "alloy-primitives",
+ "alloy-rlp",
+ "anyhow",
+ "reqwest",
+ "revm",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "url",
+]
+
+[[package]]
 name = "cartesi-coprocessor-evm-call-runner"
 version = "0.0.0"
+dependencies = [
+ "cartesi-coprocessor-evm",
+]
 
 [[package]]
 name = "cc"
@@ -1102,22 +1121,6 @@ checksum = "976dd42dc7e85965fe702eb8164f21f450704bdde31faefd6471dba214cb594e"
 dependencies = [
  "libc",
  "windows-sys 0.59.0",
-]
-
-[[package]]
-name = "evm-call"
-version = "0.0.0"
-dependencies = [
- "alloy-consensus",
- "alloy-primitives",
- "alloy-rlp",
- "anyhow",
- "reqwest",
- "revm",
- "serde",
- "serde_json",
- "thiserror",
- "url",
 ]
 
 [[package]]
