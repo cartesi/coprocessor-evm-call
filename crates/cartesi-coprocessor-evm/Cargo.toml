@@ -5,7 +5,8 @@ edition.workspace = true
 [dependencies]
 anyhow.workspace = true
 thiserror.workspace = true
-reqwest.workspace = true
+tokio.workspace = true
+hyper.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 url.workspace = true
