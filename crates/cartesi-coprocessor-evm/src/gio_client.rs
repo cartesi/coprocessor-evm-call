@@ -15,7 +15,7 @@ pub enum GIODomain {
 
 impl GIODomain {
     pub fn to_bytes(self) -> [u8; 4] {
-        (self as u32).to_ne_bytes()
+        (self as u32).to_le_bytes()
     }
 }
 
@@ -27,7 +27,7 @@ pub enum GIOHint {
 
 impl GIOHint {
     pub fn to_bytes(self) -> [u8; 2] {
-        (self as u16).to_ne_bytes()
+        (self as u16).to_le_bytes()
     }
 }
 
@@ -38,7 +38,7 @@ pub enum GIOHash {
 
 impl GIOHash {
     pub fn to_bytes(self) -> [u8; 1] {
-        (self as u8).to_ne_bytes()
+        (self as u8).to_le_bytes()
     }
 }
 
