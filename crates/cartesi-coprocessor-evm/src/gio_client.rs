@@ -92,7 +92,11 @@ impl GIOClient {
             .request(request)
             .await
             .map_err(|err| GIOError::EmitFailed(err.to_string()))?;
-
+        
+        if !response.status().is_success() {
+            return Err(GIOError::EmitFailed(format!("response status code - {}", response.status())))
+        }
+        
         // Parse response
         let response_body = hyper::body::to_bytes(response.into_body())
             .await
