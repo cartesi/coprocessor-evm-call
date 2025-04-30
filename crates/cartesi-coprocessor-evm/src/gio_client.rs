@@ -5,6 +5,7 @@ use alloy_primitives::hex;
 
 use crate::gio_error::GIOError;
 
+#[derive(Copy, Clone)]
 #[repr(u32)]
 pub enum GIODomain {
     GetStorage = 0x27,
@@ -14,11 +15,12 @@ pub enum GIODomain {
 }
 
 impl GIODomain {
-    pub fn to_bytes(self) -> [u8; 4] {
-        (self as u32).to_le_bytes()
+    pub fn to_bytes(self) -> Vec<u8> {
+        (self as u32).to_le_bytes().to_vec()
     }
 }
 
+#[derive(Copy, Clone)]
 #[repr(u8)]
 pub enum GIOHint {
     EthCodePreimage = 1,
@@ -26,8 +28,8 @@ pub enum GIOHint {
 }
 
 impl GIOHint {
-    pub fn to_bytes(self) -> [u8; 1] {
-        (self as u8).to_le_bytes()
+    pub fn to_bytes(self) -> Vec<u8> {
+        (self as u8).to_le_bytes().to_vec()
     }
 }
 
@@ -37,8 +39,8 @@ pub enum GIOHash {
 }
 
 impl GIOHash {
-    pub fn to_bytes(self) -> [u8; 1] {
-        (self as u8).to_le_bytes()
+    pub fn to_bytes(self) -> Vec<u8> {
+        (self as u8).to_le_bytes().to_vec()
     }
 }
 
@@ -80,7 +82,7 @@ impl GIOClient {
         serde_json::to_writer(&mut request_body, &request)
             .map_err(|err| GIOError::EmitFailed(err.to_string()))?;
         let request_body = Body::from(request_body);
-        
+
         // Send request
         let request = Request::builder()
             .uri(self.url.to_string())
@@ -88,24 +90,28 @@ impl GIOClient {
             .header("Content-Type", "application/json")
             .body(request_body)
             .map_err(|err| GIOError::EmitFailed(err.to_string()))?;
-        let response = self.client
+        let response = self
+            .client
             .request(request)
             .await
             .map_err(|err| GIOError::EmitFailed(err.to_string()))?;
-        
+
         if !response.status().is_success() {
-            return Err(GIOError::EmitFailed(format!("response status code - {}", response.status())))
+            return Err(GIOError::EmitFailed(format!(
+                "response status code - {}",
+                response.status()
+            )));
         }
-        
+
         // Parse response
         let response_body = hyper::body::to_bytes(response.into_body())
             .await
-            .map_err(|err| GIOError::EmitFailed(err.to_string()))?; 
+            .map_err(|err| GIOError::EmitFailed(err.to_string()))?;
         let respones_json: GIOServerResponse = serde_json::from_slice(&response_body.to_vec())
             .map_err(|err| GIOError::EmitFailed(err.to_string()))?;
-        let response_data =
-            hex::decode(respones_json.response).map_err(|err| GIOError::EmitFailed(err.to_string()))?;
-        
+        let response_data = hex::decode(respones_json.response)
+            .map_err(|err| GIOError::EmitFailed(err.to_string()))?;
+
         Ok(GIOResponse {
             code: respones_json.response_code,
             data: response_data,

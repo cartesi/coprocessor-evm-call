@@ -6,7 +6,7 @@ use revm::database_interface::DBErrorMarker;
 pub enum GIOError {
     #[error("ivalid gio url")]
     InvalidURL,
-    
+
     #[error("failed to emit gio: {0}")]
     EmitFailed(String),
 

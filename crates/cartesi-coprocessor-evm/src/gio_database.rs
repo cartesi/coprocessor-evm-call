@@ -2,11 +2,11 @@ use alloy_rlp::Decodable;
 use revm::{
     database_interface::async_db::DatabaseAsync,
     primitives::{Address, B256, U256},
-    state::{AccountInfo, Bytecode}
+    state::{AccountInfo, Bytecode},
 };
 
-use alloy_primitives::{BlockHash, Bytes};
 use alloy_consensus::Header;
+use alloy_primitives::{BlockHash, Bytes};
 
 use crate::{
     gio_client::{GIOClient, GIODomain, GIOHash, GIOHint},
@@ -24,7 +24,7 @@ impl GIODatabase {
     }
 
     async fn get_preimage(&self, hash: B256) -> Result<Vec<u8>, GIOError> {
-        let input = concat_bytes(&GIOHash::Keccak256.to_bytes().to_vec(), &hash.to_vec());
+        let input = concat_bytes(&GIOHash::Keccak256.to_bytes(), &hash.to_vec());
         let response = self.client.emit_gio(GIODomain::GetImage, &input).await?;
         if !response.is_ok() {
             Err(GIOError::BadResponse {
@@ -37,8 +37,11 @@ impl GIODatabase {
     }
 
     async fn emit_hint(&self, hint: GIOHint, input: &Vec<u8>) -> Result<(), GIOError> {
-        let input = concat_bytes(&hint.to_bytes().to_vec(), input);
-        let response = self.client.emit_gio(GIODomain::PreimageHint, &input).await?;
+        let input = concat_bytes(&hint.to_bytes(), input);
+        let response = self
+            .client
+            .emit_gio(GIODomain::PreimageHint, &input)
+            .await?;
         if !response.is_ok() {
             Err(GIOError::BadResponse {
                 message: "failed to emit preimage".to_string(),
@@ -50,7 +53,8 @@ impl GIODatabase {
     }
 
     async fn get_block_header(&self, block_hash: BlockHash) -> Result<Header, GIOError> {
-        self.emit_hint(GIOHint::EthBlockPreimage, &block_hash.to_vec()).await?;
+        self.emit_hint(GIOHint::EthBlockPreimage, &block_hash.to_vec())
+            .await?;
         let header_data = self.get_preimage(block_hash).await?;
         let mut header_data = header_data.as_slice();
         let header = Header::decode(&mut header_data)
@@ -64,7 +68,7 @@ impl DatabaseAsync for GIODatabase {
 
     async fn basic_async(&mut self, address: Address) -> Result<Option<AccountInfo>, Self::Error> {
         let input = concat_bytes(&self.block_hash.to_vec(), &address.to_vec());
-        let response = self.client.emit_gio(GIODomain::PreimageHint, &input).await?;
+        let response = self.client.emit_gio(GIODomain::GetAccount, &input).await?;
         if !response.is_ok() {
             return Err(GIOError::BadResponse {
                 message: "failed to get account".to_string(),
@@ -105,7 +109,7 @@ impl DatabaseAsync for GIODatabase {
         let input = concat_bytes(&self.block_hash.to_vec(), &address.to_vec());
         let input = concat_bytes(&input, &index.to_le_bytes_vec());
 
-        let response = self.client.emit_gio(GIODomain::PreimageHint, &input).await?;
+        let response = self.client.emit_gio(GIODomain::GetStorage, &input).await?;
         if !response.is_ok() {
             return Err(GIOError::BadResponse {
                 message: "failed to get storage slot".to_string(),
@@ -113,7 +117,9 @@ impl DatabaseAsync for GIODatabase {
             });
         }
 
-        let slot_data: [u8; 32] = response.data.try_into()
+        let slot_data: [u8; 32] = response
+            .data
+            .try_into()
             .expect("invalid storage slot data length");
         Ok(U256::from_le_bytes(slot_data))
     }
@@ -123,7 +129,7 @@ impl DatabaseAsync for GIODatabase {
         loop {
             let header = self.get_block_header(block_hash).await?;
             if header.number == number {
-                return Ok(header.hash_slow())
+                return Ok(header.hash_slow());
             }
             block_hash = header.parent_hash;
         }
