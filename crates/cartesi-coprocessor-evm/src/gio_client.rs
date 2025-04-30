@@ -19,15 +19,15 @@ impl GIODomain {
     }
 }
 
-#[repr(u16)]
+#[repr(u8)]
 pub enum GIOHint {
     EthCodePreimage = 1,
     EthBlockPreimage = 2,
 }
 
 impl GIOHint {
-    pub fn to_bytes(self) -> [u8; 2] {
-        (self as u16).to_le_bytes()
+    pub fn to_bytes(self) -> [u8; 1] {
+        (self as u8).to_le_bytes()
     }
 }
 
