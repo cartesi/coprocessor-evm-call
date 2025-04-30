@@ -67,6 +67,7 @@ impl DatabaseAsync for GIODatabase {
     type Error = GIOError;
 
     async fn basic_async(&mut self, address: Address) -> Result<Option<AccountInfo>, Self::Error> {
+        // Get account
         let input = concat_bytes(&self.block_hash.to_vec(), &address.to_vec());
         let response = self.client.emit_gio(GIODomain::GetAccount, &input).await?;
         if !response.is_ok() {
@@ -86,7 +87,9 @@ impl DatabaseAsync for GIODatabase {
             .try_into()
             .expect("invalid account account code hash data length");
 
-        self.emit_hint(GIOHint::EthCodePreimage, &address.to_vec())
+        // Get code
+        let input = concat_bytes(&self.block_hash.to_vec(), &address.to_vec());
+        self.emit_hint(GIOHint::EthCodePreimage, &input)
             .await?;
         let code_data = self.get_preimage(B256::from(code_hash_data)).await?;
 
