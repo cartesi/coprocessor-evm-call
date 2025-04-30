@@ -78,7 +78,7 @@ impl DatabaseAsync for GIODatabase {
         let input = concat_bytes(&self.block_hash.to_vec(), &address.to_vec());
         
         // !!!
-        println!("basic_async - account - emit_gio");
+        println!("basic_async - account - emit_gio - {}", input.len());
         
         let response = self.client.emit_gio(GIODomain::GetAccount, &input).await?;
         if !response.is_ok() {
