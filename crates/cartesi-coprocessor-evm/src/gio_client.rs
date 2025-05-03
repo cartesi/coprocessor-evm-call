@@ -127,14 +127,12 @@ impl GIOClient {
 }
 
 #[derive(serde::Serialize)]
-#[serde(rename_all = "camelCase")]
 struct GIOServerRequest {
     domain: u32,
     id: String,
 }
 
 #[derive(serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
 struct GIOServerResponse {
     pub response_code: u32,
     pub response: String,
