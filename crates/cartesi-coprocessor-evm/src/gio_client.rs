@@ -5,6 +5,9 @@ use alloy_primitives::hex;
 
 use crate::gio_error::GIOError;
 
+// !!!
+use std::str;
+
 #[derive(Copy, Clone)]
 #[repr(u32)]
 pub enum GIODomain {
@@ -107,6 +110,10 @@ impl GIOClient {
         let response_body = hyper::body::to_bytes(response.into_body())
             .await
             .map_err(|err| GIOError::EmitFailed(err.to_string()))?;
+
+        // !!!
+        println!("{}", str::from_utf8(&response_body.to_vec()).unwrap());
+
         let respones_json: GIOServerResponse = serde_json::from_slice(&response_body.to_vec())
             .map_err(|err| GIOError::EmitFailed(err.to_string()))?;
         let response_data = hex::decode(respones_json.response)
