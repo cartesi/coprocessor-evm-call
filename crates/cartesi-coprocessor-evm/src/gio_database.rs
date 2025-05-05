@@ -26,30 +26,15 @@ impl GIODatabase {
     async fn get_preimage(&self, hash: B256) -> Result<Vec<u8>, GIOError> {
         let input = concat_bytes(&GIOHash::Keccak256.to_bytes(), &hash.to_vec());
         let response = self.client.emit_gio(GIODomain::GetImage, &input).await?;
-        if !response.is_ok() {
-            Err(GIOError::BadResponse {
-                message: "failed to emit preimage".to_string(),
-                response_code: response.code,
-            })
-        } else {
-            Ok(response.data)
-        }
+        Ok(response.data)
     }
 
     async fn emit_hint(&self, hint: GIOHint, input: &Vec<u8>) -> Result<(), GIOError> {
         let input = concat_bytes(&hint.to_bytes(), input);
-        let response = self
-            .client
+        self.client
             .emit_gio(GIODomain::PreimageHint, &input)
             .await?;
-        if !response.is_ok() {
-            Err(GIOError::BadResponse {
-                message: "failed to emit preimage".to_string(),
-                response_code: response.code,
-            })
-        } else {
-            Ok(())
-        }
+        Ok(())
     }
 
     async fn get_block_header(&self, block_hash: BlockHash) -> Result<Header, GIOError> {
@@ -81,12 +66,6 @@ impl DatabaseAsync for GIODatabase {
         println!("basic_async - account - emit_gio - {}", input.len());
         
         let response = self.client.emit_gio(GIODomain::GetAccount, &input).await?;
-        if !response.is_ok() {
-            return Err(GIOError::BadResponse {
-                message: "failed to get account".to_string(),
-                response_code: response.code,
-            });
-        }
 
         let balance_data: [u8; 32] = response.data[0..32]
             .try_into()
@@ -135,12 +114,6 @@ impl DatabaseAsync for GIODatabase {
         println!("storage_async - emit_gio");
         
         let response = self.client.emit_gio(GIODomain::GetStorage, &input).await?;
-        if !response.is_ok() {
-            return Err(GIOError::BadResponse {
-                message: "failed to get storage slot".to_string(),
-                response_code: response.code,
-            });
-        }
 
         let slot_data: [u8; 32] = response
             .data

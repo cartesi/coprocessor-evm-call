@@ -52,12 +52,6 @@ pub struct GIOResponse {
     pub data: Vec<u8>,
 }
 
-impl GIOResponse {
-    pub fn is_ok(&self) -> bool {
-        self.code == 200
-    }
-}
-
 #[derive(Clone)]
 pub struct GIOClient {
     client: Client<HttpConnector>,
