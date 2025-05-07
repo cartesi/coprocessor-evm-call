@@ -39,6 +39,9 @@ impl GIODatabase {
 
     async fn get_block_header(&self, block_hash: BlockHash) -> Result<Header, GIOError> {
         // !!!
+        println!("trace gio - get_block_header: {}", block_hash);
+
+        // !!!
         println!("trace gio - get_block_header: emit_hint");
         
         self.emit_hint(GIOHint::EthBlockPreimage, &block_hash.to_vec())
@@ -61,6 +64,9 @@ impl DatabaseAsync for GIODatabase {
     async fn basic_async(&mut self, address: Address) -> Result<Option<AccountInfo>, Self::Error> {
         // Get account
         let input = concat_bytes(&self.block_hash.to_vec(), &address.to_vec());
+        
+        // !!!
+        println!("trace gio - basic_async: {}", address);
         
         // !!!
         println!("trace gio - basic_async: account: emit_gio - {}", input.len());
@@ -111,6 +117,9 @@ impl DatabaseAsync for GIODatabase {
         let input = concat_bytes(&input, &index.to_le_bytes_vec());
 
         // !!!
+        println!("trace gio - storage_async: {}, {}", address, index);
+
+        // !!!
         println!("trace gio - storage_async: emit_gio");
         
         let response = self.client.emit_gio(GIODomain::GetStorage, &input).await?;
@@ -124,7 +133,7 @@ impl DatabaseAsync for GIODatabase {
 
     async fn block_hash_async(&mut self, number: u64) -> Result<B256, Self::Error> {
         // !!!
-        println!("trace gio - block_hash_async");
+        println!("trace gio - block_hash_async: {}", number);
         
         let mut block_hash = self.block_hash;
         loop {
