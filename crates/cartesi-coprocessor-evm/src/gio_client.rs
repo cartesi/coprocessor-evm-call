@@ -78,15 +78,19 @@ impl GIOClient {
         let mut request_body = Vec::<u8>::new();
         serde_json::to_writer(&mut request_body, &request)
             .map_err(|err| GIOError::EmitFailed(err.to_string()))?;
-        let request_body = Body::from(request_body);
 
         // Send request
         let request = Request::builder()
             .uri(self.url.to_string())
             .method("POST")
             .header("Content-Type", "application/json")
-            .body(request_body)
+            // !!!
+            .body(Body::from(request_body.clone()))
             .map_err(|err| GIOError::EmitFailed(err.to_string()))?;
+
+        // !!!
+        println!("trace gio - request: {}", str::from_utf8(&request_body).unwrap());
+
         let response = self
             .client
             .request(request)
@@ -106,7 +110,7 @@ impl GIOClient {
             .map_err(|err| GIOError::EmitFailed(err.to_string()))?;
 
         // !!!
-        println!("{}", str::from_utf8(&response_body.to_vec()).unwrap());
+        println!("trace gio - response: {}", str::from_utf8(&response_body.to_vec()).unwrap());
 
         let respones_json: GIOServerResponse = serde_json::from_slice(&response_body.to_vec())
             .map_err(|err| GIOError::EmitFailed(err.to_string()))?;
