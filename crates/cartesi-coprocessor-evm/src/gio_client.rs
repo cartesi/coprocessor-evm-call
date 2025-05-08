@@ -19,7 +19,7 @@ pub enum GIODomain {
 
 impl GIODomain {
     pub fn to_bytes(self) -> Vec<u8> {
-        (self as u32).to_le_bytes().to_vec()
+        (self as u32).to_be_bytes().to_vec()
     }
 }
 
@@ -32,7 +32,7 @@ pub enum GIOHint {
 
 impl GIOHint {
     pub fn to_bytes(self) -> Vec<u8> {
-        (self as u8).to_le_bytes().to_vec()
+        vec![self as u8]
     }
 }
 
@@ -43,7 +43,7 @@ pub enum GIOHash {
 
 impl GIOHash {
     pub fn to_bytes(self) -> Vec<u8> {
-        (self as u8).to_le_bytes().to_vec()
+        vec![self as u8]
     }
 }
 
