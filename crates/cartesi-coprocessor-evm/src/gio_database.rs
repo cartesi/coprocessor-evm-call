@@ -98,8 +98,8 @@ impl DatabaseAsync for GIODatabase {
         let code_data = self.get_preimage(B256::from(code_hash_data)).await?;
 
         let account = AccountInfo {
-            balance: U256::from_le_bytes(balance_data),
-            nonce: u64::from_le_bytes(nonce_data),
+            balance: U256::from_be_bytes(balance_data),
+            nonce: u64::from_be_bytes(nonce_data),
             code_hash: B256::from(code_hash_data),
             code: Some(Bytecode::new_raw(Bytes::from(code_data))),
         };
@@ -114,7 +114,7 @@ impl DatabaseAsync for GIODatabase {
 
     async fn storage_async(&mut self, address: Address, index: U256) -> Result<U256, Self::Error> {
         let input = concat_bytes(&self.block_hash.to_vec(), &address.to_vec());
-        let input = concat_bytes(&input, &index.to_le_bytes_vec());
+        let input = concat_bytes(&input, &index.to_be_bytes_vec());
 
         // !!!
         println!("trace gio - storage_async: {}, {}", address, index);
@@ -128,7 +128,7 @@ impl DatabaseAsync for GIODatabase {
             .data
             .try_into()
             .expect("invalid storage slot data length");
-        Ok(U256::from_le_bytes(slot_data))
+        Ok(U256::from_be_bytes(slot_data))
     }
 
     async fn block_hash_async(&mut self, number: u64) -> Result<B256, Self::Error> {
