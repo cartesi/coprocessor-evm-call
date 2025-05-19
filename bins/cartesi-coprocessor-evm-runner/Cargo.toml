@@ -1,0 +1,6 @@
+[package]
+name = "cartesi-coprocessor-evm-call-runner"
+edition.workspace = true
+
+[dependencies]
+cartesi-coprocessor-evm.workspace = true

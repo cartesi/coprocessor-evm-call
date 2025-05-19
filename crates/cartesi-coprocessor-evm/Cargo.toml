@@ -1,0 +1,16 @@
+[package]
+name = "cartesi-coprocessor-evm"
+edition.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+hyper.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+url.workspace = true
+revm.workspace = true
+alloy-primitives.workspace = true
+alloy-consensus.workspace = true
+alloy-rlp.workspace = true
