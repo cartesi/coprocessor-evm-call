@@ -716,13 +716,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "cartesi-coprocessor-evm-call-runner"
-version = "0.0.0"
-dependencies = [
- "cartesi-coprocessor-evm",
-]
-
-[[package]]
 name = "cc"
 version = "1.2.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"

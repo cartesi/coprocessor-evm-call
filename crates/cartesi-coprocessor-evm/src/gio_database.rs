@@ -40,7 +40,7 @@ impl GIODatabase {
     async fn get_block_header(&self, block_hash: BlockHash) -> Result<Header, GIOError> {
         self.emit_hint(GIOHint::EthBlockPreimage, &block_hash.to_vec())
             .await?;
-        
+
         let header_data = self.get_preimage(block_hash).await?;
         let mut header_data = header_data.as_slice();
         let header = Header::decode(&mut header_data)
@@ -69,8 +69,7 @@ impl DatabaseAsync for GIODatabase {
 
         // Get code
         let input = concat_bytes(&self.block_hash.to_vec(), &address.to_vec());
-        self.emit_hint(GIOHint::EthCodePreimage, &input)
-            .await?;
+        self.emit_hint(GIOHint::EthCodePreimage, &input).await?;
         let code_data = self.get_preimage(B256::from(code_hash_data)).await?;
 
         let account = AccountInfo {

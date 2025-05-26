@@ -1,6 +1,5 @@
 [workspace]
 members = [
-    "bins/cartesi-coprocessor-evm-runner",
     "crates/cartesi-coprocessor-evm",
 ]
 resolver = "2"
