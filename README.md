@@ -1,9 +1,11 @@
-= Video walkthrough =
+# Video walkthrough
+
 A video walkthrough of this component can be found here:
 
 https://www.youtube.com/watch?v=ST9XS_N1Sbs
 
-= General =
+# General
+
 Library `crates/cartesi-coprocessor-evm` allows to work with EVM instance within Cartesi virtual machine:
 
 - `GIOClient` - implements Cartesi VM GIO client
